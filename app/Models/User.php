@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +19,12 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'nama',
         'email',
         'password',
+        'telepon',
+        'alamat',
+        'peran',
     ];
 
     /**
@@ -44,5 +48,42 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Mutator & Accessor agar API tetap pakai field standar Laravel
+    public function setNameAttribute($value)
+    {
+        $this->attributes['nama'] = $value;
+    }
+    public function getNameAttribute()
+    {
+        return $this->attributes['nama'] ?? null;
+    }
+
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes['telepon'] = $value;
+    }
+    public function getPhoneAttribute()
+    {
+        return $this->attributes['telepon'] ?? null;
+    }
+
+    public function setAddressAttribute($value)
+    {
+        $this->attributes['alamat'] = $value;
+    }
+    public function getAddressAttribute()
+    {
+        return $this->attributes['alamat'] ?? null;
+    }
+
+    public function setRoleAttribute($value)
+    {
+        $this->attributes['peran'] = $value;
+    }
+    public function getRoleAttribute()
+    {
+        return $this->attributes['peran'] ?? null;
     }
 }
