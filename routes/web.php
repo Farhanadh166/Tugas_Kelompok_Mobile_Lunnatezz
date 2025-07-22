@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ComplaintController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,6 +33,9 @@ Route::resource('kategori', App\Http\Controllers\KategoriController::class)->mid
 Route::resource('produk', App\Http\Controllers\ProdukController::class)->middleware('auth');
 Route::resource('pesanan', App\Http\Controllers\PesananController::class)->middleware('auth');
 Route::resource('keranjang', App\Http\Controllers\KeranjangController::class)->middleware('auth');
-Route::resource('pembayaran', App\Http\Controllers\PembayaranController::class)->middleware('auth');
-Route::post('pembayaran/{pembayaran}/update-status', [App\Http\Controllers\PembayaranController::class, 'updateStatus'])->name('pembayaran.update-status')->middleware('auth');
-Route::get('pembayaran-filter', [App\Http\Controllers\PembayaranController::class, 'filter'])->name('pembayaran.filter')->middleware('auth');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/complaints', [ComplaintController::class, 'index'])->name('admin.complaints.index');
+    Route::get('/admin/complaints/{id}', [ComplaintController::class, 'show'])->name('admin.complaints.show');
+    Route::post('/admin/complaints/{id}/update', [ComplaintController::class, 'update'])->name('admin.complaints.update');
+});
