@@ -25,6 +25,7 @@ class User extends Authenticatable
         'telepon',
         'alamat',
         'peran',
+        'photo_url', // Tambahkan agar bisa diisi
     ];
 
     /**
@@ -85,5 +86,19 @@ class User extends Authenticatable
     public function getRoleAttribute()
     {
         return $this->attributes['peran'] ?? null;
+    }
+
+    public function getPhotoUrlAttribute()
+    {
+        if (!$this->attributes['photo_url']) return null;
+        // Jika sudah berupa URL, return langsung
+        if (str_starts_with($this->attributes['photo_url'], 'http')) return $this->attributes['photo_url'];
+        // Jika path relatif, return url storage
+        return url('/storage/' . $this->attributes['photo_url']);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Pesanan::class, 'user_id');
     }
 }
