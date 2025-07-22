@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('telepon', 20)->nullable();
             $table->text('alamat')->nullable();
             $table->enum('peran', ['admin', 'pelanggan'])->default('pelanggan');
+            $table->string('photo_url')->nullable(); // Tambahkan kolom foto profil
             $table->rememberToken();
             $table->timestamps();
         });
