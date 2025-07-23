@@ -13,12 +13,20 @@ class PesananController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status');
+        $paymentMethod = $request->get('payment_method');
+        
         $query = Pesanan::with(['user', 'pembayaran'])->orderBy('created_at', 'desc');
+        
         if ($status) {
             $query->where('status', $status);
         }
+        
+        if ($paymentMethod) {
+            $query->where('metode_bayar', $paymentMethod);
+        }
+        
         $pesanans = $query->get();
-        return view('pesanan.index', compact('pesanans', 'status'));
+        return view('pesanan.index', compact('pesanans', 'status', 'paymentMethod'));
     }
 
     /**
