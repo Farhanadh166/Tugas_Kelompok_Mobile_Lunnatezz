@@ -55,39 +55,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header"><b>Info Pembayaran</b></div>
-                <div class="card-body">
-                    @if($pesanan->pembayaran)
-                        <p><b>Status:</b> 
-                            @if($pesanan->pembayaran->status_bayar == 'sukses')
-                                <span class="badge badge-success">Sukses</span>
-                            @elseif($pesanan->pembayaran->status_bayar == 'pending')
-                                <span class="badge badge-warning">Pending</span>
-                            @else
-                                <span class="badge badge-danger">Gagal</span>
-                            @endif
-                        </p>
-                        <p><b>Tanggal Bayar:</b> {{ $pesanan->pembayaran->tanggal_bayar }}</p>
-                        <p><b>Jumlah Bayar:</b> Rp {{ number_format($pesanan->pembayaran->jumlah_bayar,0,',','.') }}</p>
-                        
-                        @if($pesanan->metode_bayar == 'cod')
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>COD:</strong> Tidak ada bukti pembayaran karena pembayaran dilakukan saat terima barang.
-                            </div>
-                        @elseif($pesanan->pembayaran->bukti_bayar)
-                            <p><b>Bukti Bayar:</b><br><img src="{{ url('/payment-proof/' . basename($pesanan->pembayaran->bukti_bayar)) }}" alt="Bukti Bayar" width="180"></p>
-                        @else
-                            <p><b>Bukti Bayar:</b> <span class="text-muted">Belum diupload</span></p>
-                        @endif
-                    @else
-                        <p>Belum ada pembayaran.</p>
-                    @endif
-                </div>
-            </div>
-        </div>
     </div>
     
     @if($pesanan->shipping)

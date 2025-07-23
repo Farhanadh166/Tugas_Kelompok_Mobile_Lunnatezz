@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\LaporanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,21 +19,14 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth');
 
-// Route untuk akses gambar bukti pembayaran
-Route::get('/payment-proof/{filename}', function ($filename) {
-    $path = storage_path('app/public/payment_proofs/' . $filename);
-    
-    if (!file_exists($path)) {
-        abort(404);
-    }
-    
-    return response()->file($path);
-})->where('filename', '.*');
-
 Route::resource('kategori', App\Http\Controllers\KategoriController::class)->middleware('auth');
 Route::resource('produk', App\Http\Controllers\ProdukController::class)->middleware('auth');
 Route::resource('pesanan', App\Http\Controllers\PesananController::class)->middleware('auth');
 Route::resource('keranjang', App\Http\Controllers\KeranjangController::class)->middleware('auth');
+Route::get('/laporan/produk', [LaporanController::class, 'produk'])->name('laporan.produk');
+Route::get('/laporan/produk/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.produk.pdf');
+Route::get('/laporan/penjualan', [LaporanController::class, 'penjualan'])->name('laporan.penjualan');
+Route::get('/laporan/penjualan/pdf', [LaporanController::class, 'exportPenjualanPdf'])->name('laporan.penjualan.pdf');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/complaints', [ComplaintController::class, 'index'])->name('admin.complaints.index');

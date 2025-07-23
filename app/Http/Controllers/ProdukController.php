@@ -2,31 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pesanan;
+use App\Models\Produk;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
-class PesananController extends Controller
+class ProdukController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $status = $request->get('status');
-        $paymentMethod = $request->get('payment_method');
-        
-        $query = Pesanan::with(['user', 'pembayaran'])->orderBy('created_at', 'desc');
-        
-        if ($status) {
-            $query->where('status', $status);
-        }
-        
-        if ($paymentMethod) {
-            $query->where('metode_bayar', $paymentMethod);
-        }
-        
-        $pesanans = $query->get();
-        return view('pesanan.index', compact('pesanans', 'status', 'paymentMethod'));
+        $produks = Produk::with('kategori')->orderBy('created_at', 'desc')->get();
+        return view('produk.index', compact('produks'));
     }
 
     /**
@@ -34,7 +23,8 @@ class PesananController extends Controller
      */
     public function create()
     {
-        //
+        $kategoris = Kategori::orderBy('nama')->get();
+        return view('produk.create', compact('kategoris'));
     }
 
     /**
@@ -42,45 +32,92 @@ class PesananController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'kategori_id' => 'required|exists:kategoris,id',
+            'nama' => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:10000',
+        ]);
+
+        $data = $request->only('kategori_id', 'nama', 'deskripsi', 'harga', 'stok');
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            
+            // Simpan file ke storage/app/public
+            $path = $file->storeAs('', $filename, 'public');
+            $data['gambar'] = $filename; // Simpan hanya nama file di database
+        }
+
+        Produk::create($data);
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Pesanan $pesanan)
+    public function show(Produk $produk)
     {
-        $pesanan->load(['user', 'detailPesanan.produk', 'pembayaran']);
-        return view('pesanan.show', compact('pesanan'));
+        return redirect()->route('produk.index');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Pesanan $pesanan)
+    public function edit(Produk $produk)
     {
-        // Untuk update status, bisa gunakan form di show
-        return redirect()->route('pesanan.show', $pesanan);
+        $kategoris = Kategori::orderBy('nama')->get();
+        return view('produk.edit', compact('produk', 'kategoris'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Pesanan $pesanan)
+    public function update(Request $request, Produk $produk)
     {
         $request->validate([
-            'status' => 'required|in:pending,paid,shipped,completed,cancelled',
+            'kategori_id' => 'required|exists:kategoris,id',
+            'nama' => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:10000',
         ]);
-        $pesanan->status = $request->status;
-        $pesanan->save();
-        return redirect()->route('pesanan.show', $pesanan)->with('success', 'Status pesanan berhasil diupdate!');
+
+        $data = $request->only('kategori_id', 'nama', 'deskripsi', 'harga', 'stok');
+
+        if ($request->hasFile('gambar')) {
+            // Hapus file lama jika ada
+            if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
+                Storage::disk('public')->delete($produk->gambar);
+            }
+
+            $file = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            
+            // Simpan file baru ke storage/app/public
+            $path = $file->storeAs('', $filename, 'public');
+            $data['gambar'] = $filename; // Simpan hanya nama file di database
+        }
+
+        $produk->update($data);
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil diupdate!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Produk $produk)
     {
-        //
+        // Hapus file gambar dari storage jika ada
+        if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
+            Storage::disk('public')->delete($produk->gambar);
+        }
+
+        $produk->delete();
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus!');
     }
 }
