@@ -18,6 +18,11 @@ class Produk extends Model
         return $this->belongsTo(Kategori::class);
     }
 
+    public function detailPesanan()
+    {
+        return $this->hasMany(\App\Models\DetailPesanan::class, 'produk_id');
+    }
+
     /**
      * Get the image URL attribute
      */
