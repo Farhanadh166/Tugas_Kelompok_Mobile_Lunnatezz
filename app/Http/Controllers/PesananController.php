@@ -15,7 +15,7 @@ class PesananController extends Controller
         $status = $request->get('status');
         $paymentMethod = $request->get('payment_method');
         
-        $query = Pesanan::with(['user', 'pembayaran'])->orderBy('created_at', 'desc');
+        $query = Pesanan::with(['user'])->orderBy('created_at', 'desc');
         
         if ($status) {
             $query->where('status', $status);
@@ -50,7 +50,7 @@ class PesananController extends Controller
      */
     public function show(Pesanan $pesanan)
     {
-        $pesanan->load(['user', 'detailPesanan.produk', 'pembayaran']);
+        $pesanan->load(['user', 'detailPesanan.produk']);
         return view('pesanan.show', compact('pesanan'));
     }
 

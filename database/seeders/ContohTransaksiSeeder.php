@@ -7,7 +7,6 @@ use App\Models\Keranjang;
 use App\Models\ItemKeranjang;
 use App\Models\Pesanan;
 use App\Models\DetailPesanan;
-use App\Models\Pembayaran;
 use App\Models\User;
 use App\Models\Produk;
 use App\Models\Kategori;
@@ -94,17 +93,6 @@ class ContohTransaksiSeeder extends Seeder
             'jumlah' => 2,
             'created_at' => Carbon::parse('2024-07-06 10:10:00'),
             'updated_at' => Carbon::parse('2024-07-06 10:10:00'),
-        ]);
-
-        // 3. Pembayaran
-        Pembayaran::create([
-            'pesanan_id' => $pesanan->id,
-            'tanggal_bayar' => Carbon::parse('2024-07-06 10:15:00'),
-            'jumlah_bayar' => 150000,
-            'status_bayar' => 'sukses',
-            'bukti_bayar' => 'uploads/bukti/bukti1.jpg',
-            'created_at' => Carbon::parse('2024-07-06 10:15:00'),
-            'updated_at' => Carbon::parse('2024-07-06 10:15:00'),
         ]);
     }
 } 

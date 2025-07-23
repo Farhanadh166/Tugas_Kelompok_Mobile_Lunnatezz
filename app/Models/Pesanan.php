@@ -23,11 +23,6 @@ class Pesanan extends Model
         return $this->hasMany(DetailPesanan::class);
     }
 
-    public function pembayaran()
-    {
-        return $this->hasOne(Pembayaran::class);
-    }
-
     public function shipping()
     {
         return $this->hasOne(\App\Models\Shipping::class, 'pesanan_id');
