@@ -19,6 +19,17 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth');
 
+// Route untuk akses gambar bukti pembayaran
+Route::get('/payment-proof/{filename}', function ($filename) {
+    $path = storage_path('app/public/payment_proofs/' . $filename);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    
+    return response()->file($path);
+})->where('filename', '.*');
+
 Route::resource('kategori', App\Http\Controllers\KategoriController::class)->middleware('auth');
 Route::resource('produk', App\Http\Controllers\ProdukController::class)->middleware('auth');
 Route::resource('pesanan', App\Http\Controllers\PesananController::class)->middleware('auth');

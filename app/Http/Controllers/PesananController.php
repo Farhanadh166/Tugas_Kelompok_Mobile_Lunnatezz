@@ -15,7 +15,7 @@ class PesananController extends Controller
         $status = $request->get('status');
         $paymentMethod = $request->get('payment_method');
         
-        $query = Pesanan::with(['user'])->orderBy('created_at', 'desc');
+        $query = Pesanan::with(['user', 'pembayaran'])->orderBy('created_at', 'desc');
         
         if ($status) {
             $query->where('status', $status);
@@ -50,7 +50,7 @@ class PesananController extends Controller
      */
     public function show(Pesanan $pesanan)
     {
-        $pesanan->load(['user', 'detailPesanan.produk']);
+        $pesanan->load(['user', 'detailPesanan.produk', 'pembayaran']);
         return view('pesanan.show', compact('pesanan'));
     }
 
@@ -71,9 +71,49 @@ class PesananController extends Controller
         $request->validate([
             'status' => 'required|in:pending,paid,shipped,completed,cancelled',
         ]);
+
+        // Validasi alur status pesanan
+        $allowedTransitions = $this->getAllowedStatusTransitions($pesanan->status);
+        
+        if (!in_array($request->status, $allowedTransitions)) {
+            return redirect()->route('pesanan.show', $pesanan)
+                ->with('error', 'Transisi status tidak valid. Status saat ini: ' . ucfirst($pesanan->status));
+        }
+
+        $oldStatus = $pesanan->status;
         $pesanan->status = $request->status;
         $pesanan->save();
-        return redirect()->route('pesanan.show', $pesanan)->with('success', 'Status pesanan berhasil diupdate!');
+
+        // Update status pembayaran jika status pesanan berubah
+        if ($request->status === 'paid' && $pesanan->pembayaran) {
+            $pesanan->pembayaran->update([
+                'status_bayar' => 'sukses',
+                'tanggal_bayar' => now()
+            ]);
+        } elseif ($request->status === 'cancelled' && $pesanan->pembayaran) {
+            $pesanan->pembayaran->update([
+                'status_bayar' => 'gagal'
+            ]);
+        }
+        
+        return redirect()->route('pesanan.show', $pesanan)
+            ->with('success', 'Status pesanan berhasil diupdate dari ' . ucfirst($oldStatus) . ' ke ' . ucfirst($request->status) . '!');
+    }
+
+    /**
+     * Get allowed status transitions based on current status
+     */
+    private function getAllowedStatusTransitions($currentStatus)
+    {
+        $transitions = [
+            'pending' => ['paid', 'cancelled'],
+            'paid' => ['shipped'],
+            'shipped' => ['completed'],
+            'completed' => [], // Final state
+            'cancelled' => [], // Final state
+        ];
+
+        return $transitions[$currentStatus] ?? [];
     }
 
     /**

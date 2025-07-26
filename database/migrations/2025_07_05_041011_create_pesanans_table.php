@@ -19,6 +19,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'paid', 'shipped', 'completed', 'cancelled'])->default('pending');
             $table->string('metode_bayar', 50)->nullable();
             $table->text('alamat_kirim');
+            $table->text('catatan')->nullable();
+            $table->string('order_number')->nullable();
             $table->timestamps();
         });
     }

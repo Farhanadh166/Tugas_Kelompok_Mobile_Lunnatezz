@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}/history', [OrderController::class, 'orderHistory']);
     Route::get('/orders/by-number/{order_number}', [OrderController::class, 'showByOrderNumber']);
     Route::post('orders/{id}/confirm-received', [\App\Http\Controllers\Api\OrderController::class, 'confirmReceived']);
+    Route::put('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
     Route::post('/orders/checkout-with-proof', [OrderController::class, 'checkoutWithProof']);
     
     // Payment routes (memerlukan login)

@@ -630,6 +630,7 @@ class OrderController extends Controller
                 'jumlah_bayar' => $total,
                 'status_bayar' => 'pending',
                 'bukti_bayar' => $filePath,
+                'tanggal_bayar' => now(), // Set tanggal pembayaran saat bukti diupload
                 'catatan' => $request->payment_notes,
             ]);
 
@@ -656,5 +657,89 @@ class OrderController extends Controller
                 'message' => 'Gagal membuat pesanan: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Update order status with validation
+     */
+    public function updateOrderStatus(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:pending,paid,shipped,completed,cancelled',
+            ]);
+
+            $user = Auth::user();
+            $order = Pesanan::where('id', $id)->first();
+
+            if (!$order) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Pesanan tidak ditemukan'
+                ], 404);
+            }
+
+            // Validasi alur status pesanan
+            $allowedTransitions = $this->getAllowedStatusTransitions($order->status);
+            
+            if (!in_array($request->status, $allowedTransitions)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Transisi status tidak valid. Status saat ini: ' . ucfirst($order->status),
+                    'current_status' => $order->status,
+                    'allowed_transitions' => $allowedTransitions
+                ], 400);
+            }
+
+            $oldStatus = $order->status;
+            $order->status = $request->status;
+            $order->save();
+
+            // Update status pembayaran jika status pesanan berubah
+            if ($request->status === 'paid' && $order->pembayaran) {
+                $order->pembayaran->update([
+                    'status_bayar' => 'sukses',
+                    'tanggal_bayar' => now()
+                ]);
+            } elseif ($request->status === 'cancelled' && $order->pembayaran) {
+                $order->pembayaran->update([
+                    'status_bayar' => 'gagal'
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Status pesanan berhasil diupdate dari ' . ucfirst($oldStatus) . ' ke ' . ucfirst($request->status),
+                'data' => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'old_status' => $oldStatus,
+                    'new_status' => $request->status,
+                    'payment_status' => $order->pembayaran ? $order->pembayaran->status_bayar : null
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get allowed status transitions based on current status
+     */
+    private function getAllowedStatusTransitions($currentStatus)
+    {
+        $transitions = [
+            'pending' => ['paid', 'cancelled'],
+            'paid' => ['shipped'],
+            'shipped' => ['completed'],
+            'completed' => [], // Final state
+            'cancelled' => [], // Final state
+        ];
+
+        return $transitions[$currentStatus] ?? [];
     }
 }
