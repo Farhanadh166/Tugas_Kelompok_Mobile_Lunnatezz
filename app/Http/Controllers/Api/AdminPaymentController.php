@@ -42,13 +42,38 @@ class AdminPaymentController extends Controller
         $pembayaran = Pembayaran::findOrFail($id);
         $pembayaran->status_bayar = $request->status;
 
+        // Validasi alur status pesanan berdasarkan status pembayaran
+        $pesanan = $pembayaran->pesanan;
+        $allowedTransitions = $this->getAllowedStatusTransitions($pesanan->status);
+        
         if ($request->status == 'sukses') {
             $pembayaran->tanggal_bayar = now();
-            $pembayaran->pesanan->update(['status' => 'paid']);
+            if (in_array('paid', $allowedTransitions)) {
+                $pesanan->update(['status' => 'paid']);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat mengubah status pesanan ke PAID. Status saat ini: ' . ucfirst($pesanan->status)
+                ], 400);
+            }
         } else if (in_array($request->status, ['gagal', 'dibatalkan'])) {
-             $pembayaran->pesanan->update(['status' => 'cancelled']);
+            if (in_array('cancelled', $allowedTransitions)) {
+                $pesanan->update(['status' => 'cancelled']);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat mengubah status pesanan ke CANCELLED. Status saat ini: ' . ucfirst($pesanan->status)
+                ], 400);
+            }
         } else {
-             $pembayaran->pesanan->update(['status' => 'pending']);
+            if (in_array('pending', $allowedTransitions)) {
+                $pesanan->update(['status' => 'pending']);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat mengubah status pesanan ke PENDING. Status saat ini: ' . ucfirst($pesanan->status)
+                ], 400);
+            }
         }
 
         $pembayaran->save();
@@ -58,5 +83,21 @@ class AdminPaymentController extends Controller
             'message' => 'Status pembayaran berhasil diperbarui.',
             'data' => $pembayaran
         ]);
+    }
+
+    /**
+     * Get allowed status transitions based on current status
+     */
+    private function getAllowedStatusTransitions($currentStatus)
+    {
+        $transitions = [
+            'pending' => ['paid', 'cancelled'],
+            'paid' => ['shipped'],
+            'shipped' => ['completed'],
+            'completed' => [], // Final state
+            'cancelled' => [], // Final state
+        ];
+
+        return $transitions[$currentStatus] ?? [];
     }
 } 

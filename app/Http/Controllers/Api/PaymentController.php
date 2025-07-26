@@ -177,7 +177,8 @@ class PaymentController extends Controller
         if ($pembayaran) {
             $pembayaran->update([
                 'bukti_bayar' => $path, // Simpan path relatif dari storage
-                'status_bayar' => 'pending' // Menunggu verifikasi admin
+                'status_bayar' => 'pending', // Menunggu verifikasi admin
+                'tanggal_bayar' => now() // Set tanggal pembayaran saat bukti diupload
             ]);
         }
 
