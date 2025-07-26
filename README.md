@@ -110,6 +110,15 @@ MIT License
 
 ---
 
+## 👥 Tim Pengembang
+
+-   **Farhan Adha** (Front End)
+-   **Rendi Febri Yusrimel** (Back End)
+-   **Widya Safitri** (Back End)
+-   **Sherin Ayunda Henzli** (UI/UX)
+
+---
+
 > _"Perancangan Aplikasi Penjualan Aksesoris Lunneettez Online Berbasis Flutter & Laravel API"_  
 > — Tim Lunneettez
 
